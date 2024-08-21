@@ -1,10 +1,15 @@
-export function Persons({ persons }) {
+export function Persons({ persons, handleDelete }) {
+  const handleClick = (id) => {
+    return handleDelete(id);
+  };
+
   return (
     <ul>
       {persons.map((person) => {
         return (
           <li key={person.id}>
             {person.name} - {person.number}
+            <button onClick={() => handleClick(person.id)}>Delete</button>
           </li>
         );
       })}
