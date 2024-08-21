@@ -42,3 +42,18 @@ export function PersonsForm({ values, handleChange, onSubmit }) {
     </form>
   );
 }
+
+export function Notification({ message }) {
+  if (message === null) {
+    return null;
+  }
+  return (
+    <div
+      className={
+        message.type === "error" ? "notification-error" : "notification-success"
+      }
+    >
+      {message.content}
+    </div>
+  );
+}

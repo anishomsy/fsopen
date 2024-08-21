@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { Filter, Persons, PersonsForm } from "./components/Phonebook";
+import {
+  Filter,
+  Notification,
+  Persons,
+  PersonsForm,
+} from "./components/Phonebook";
 import phonebookService from "./services/phonebook";
 const App = () => {
   const [persons, setPersons] = useState([
@@ -14,12 +19,21 @@ const App = () => {
     number: "",
     filter: "",
   });
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     phonebookService.getAll().then((data) => {
       setPersons(data);
     });
   }, []);
+
+  function Notify(message) {
+    setErrorMessage(message);
+
+    setTimeout(() => {
+      setErrorMessage(null);
+    }, 5000);
+  }
 
   function addNewName(e) {
     e.preventDefault();
@@ -44,6 +58,11 @@ const App = () => {
       const newObject = { ...inPhonebook, number: formData.number };
 
       phonebookService.update(inPhonebook.id, newObject).then((data) => {
+        Notify({
+          content: `${data.name} number was updated!`,
+          type: "success",
+        });
+
         setPersons(
           persons.map((p) => {
             return p.id !== data.id ? p : data;
@@ -68,6 +87,10 @@ const App = () => {
     };
 
     phonebookService.create(newNameObject).then((data) => {
+      Notify({
+        content: `${data.name} was added!`,
+        type: "success",
+      });
       setPersons(persons.concat(data));
       const newFormChange = {
         name: "",
@@ -95,13 +118,28 @@ const App = () => {
       return;
     }
 
-    phonebookService.remove(id).then((data) => {
-      setPersons(
-        persons.filter((p) => {
-          return p.id !== data.id;
-        }),
-      );
-    });
+    phonebookService
+      .remove(id)
+      .then((data) => {
+        // Error Messages
+        Notify({
+          content: `${data.name} was deleted!`,
+          type: "success",
+        });
+
+        setPersons(
+          persons.filter((p) => {
+            return p.id !== data.id;
+          }),
+        );
+      })
+      .catch((error) => {
+        Notify({
+          content: `${person.name} was already deleted!`,
+          type: "error",
+        });
+        setPersons(persons.filter((p) => p.id !== person.id));
+      });
   };
 
   // convert the strings toLowerCase() for easier comperasion and filter
@@ -117,7 +155,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-
+      <Notification message={errorMessage} />
       <Filter value={formData.filter} handleChange={handleChange} />
       <br />
       <h1>Add new</h1>
