@@ -86,19 +86,28 @@ const App = () => {
       number: formData.number,
     };
 
-    phonebookService.create(newNameObject).then((data) => {
-      Notify({
-        content: `${data.name} was added!`,
-        type: "success",
+    phonebookService
+      .create(newNameObject)
+      .then((data) => {
+        Notify({
+          content: `${data.name} was added!`,
+          type: "success",
+        });
+        setPersons(persons.concat(data));
+        const newFormChange = {
+          name: "",
+          number: "",
+          filter: "",
+        };
+        setFormData(newFormChange);
+      })
+      .catch((error) => {
+        return Notify({
+          content: error.response.data.error,
+          type: "error",
+        });
+        // console.log(error.response.data.error);
       });
-      setPersons(persons.concat(data));
-      const newFormChange = {
-        name: "",
-        number: "",
-        filter: "",
-      };
-      setFormData(newFormChange);
-    });
   }
 
   const handleChange = (e) => {
