@@ -1,10 +1,11 @@
+const _ = require("lodash");
 const dummy = (blogs) => {
   return 1;
 };
 
 const totalLikes = (blogs) => {
   if (blogs.length === 0) {
-    return 0;
+    return null;
   }
   if (!blogs.length && typeof blogs === "object") {
     return blogs.likes;
@@ -34,8 +35,41 @@ const favoriteBlog = (blogs = []) => {
   return favorite;
 };
 
+const mostBlogs = (blogs = []) => {
+  if (blogs.length === 0) {
+    return null;
+  }
+  const count = _.countBy(blogs, "author");
+  return _.maxBy(
+    _.map(count, (value, key) => ({ author: key, blogs: value })),
+    "blogs",
+  );
+};
+
+const mostLikes = (blogs = []) => {
+  if (blogs.length === 0) {
+    return null;
+  }
+  // if (blogs.length === 1) {
+  //   console.log("the length is one", blogs);
+  //   return;
+  // }
+  const grouped = _.groupBy(blogs, "author");
+  console.log("love", grouped);
+  return _.maxBy(
+    _.map(grouped, (values, key) => {
+      return {
+        author: key,
+        likes: _.sumBy(values, "likes"),
+      };
+    }),
+    "likes",
+  );
+};
 module.exports = {
   dummy,
   totalLikes,
   favoriteBlog,
+  mostBlogs,
+  mostLikes,
 };
