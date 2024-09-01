@@ -55,7 +55,6 @@ const mostLikes = (blogs = []) => {
   //   return;
   // }
   const grouped = _.groupBy(blogs, "author");
-  console.log("love", grouped);
   return _.maxBy(
     _.map(grouped, (values, key) => {
       return {
