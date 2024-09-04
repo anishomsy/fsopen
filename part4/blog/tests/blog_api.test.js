@@ -5,12 +5,37 @@ const supertest = require("supertest");
 const Blog = require("../models/blog");
 const helper = require("./helper");
 const app = require("../app.js");
-
+const User = require("../models/user.js");
 const api = supertest(app);
+
+const loginToken = async () => {
+  const loggedInUser = await api
+    .post("/api/login")
+    .send({
+      username: "dummy",
+      password: "dummypassword",
+    })
+    .expect(200);
+  return loggedInUser.body.token;
+};
+
 describe("testing Blog API", () => {
   beforeEach(async () => {
     await Blog.deleteMany({});
 
+    await User.deleteOne({});
+    // 1. create a dummy user
+    // 2. login and get the jwt in eact tests
+    // 2.  do the test using the dummy user
+
+    // creating the user
+
+    const newUser = {
+      username: "dummy",
+      name: "John Doe",
+      password: "dummypassword",
+    };
+    await api.post("/api/users").send(newUser).expect(201);
     await Blog.insertMany(helper.blogs);
   });
 
@@ -36,20 +61,25 @@ describe("testing Blog API", () => {
 
   describe("when adding a blog, test that", () => {
     test("the length of the blogs increased by one", async () => {
+      const token = await loginToken();
       const newBlogObject = {
         title: "Test 1",
         author: "Author 1",
         url: "localhost.com",
         likes: 30,
       };
-
-      await api.post("/api/blogs").send(newBlogObject).expect(201);
+      await api
+        .post("/api/blogs")
+        .send(newBlogObject)
+        .set("Authorization", "Bearer " + token)
+        .expect(201);
       const blogs = await api.get("/api/blogs");
       // console.log(blogs.body);
       assert.strictEqual(helper.blogs.length + 1, blogs.body.length);
     });
 
     test("if the likes property was not in the request,  return a default value of 0 likes", async () => {
+      const token = await loginToken();
       const newBlogObject = {
         title: "Test 1",
         author: "Author 1",
@@ -59,6 +89,8 @@ describe("testing Blog API", () => {
       const result = await api
         .post("/api/blogs")
         .send(newBlogObject)
+
+        .set("Authorization", "Bearer " + token)
         .expect(201);
       assert.strictEqual(result.body.likes, 0);
     });
@@ -69,9 +101,12 @@ describe("testing Blog API", () => {
         likes: 4,
       };
 
+      const token = await loginToken();
       const result = await api
         .post("/api/blogs")
         .send(newBlogObject)
+
+        .set("Authorization", "Bearer " + token)
         .expect(400);
     });
     test("if url is missing, return an error 400", async () => {
@@ -81,9 +116,12 @@ describe("testing Blog API", () => {
         likes: 4,
       };
 
+      const token = await loginToken();
       const result = await api
         .post("/api/blogs")
         .send(newBlogObject)
+
+        .set("Authorization", "Bearer " + token)
         .expect(400);
     });
   });
@@ -91,20 +129,48 @@ describe("testing Blog API", () => {
   describe("when deleting a blog, test that", () => {
     it("blog is deleted successfully", async () => {
       // get lists of blogs and get the first id
-      const blogs = await api.get("/api/blogs").expect(200);
-      const chosenBlog = blogs.body[0];
+      const token = await loginToken();
+      const newBlogObject = {
+        title: "Test 1",
+        author: "Author 1",
+        url: "localhost.com",
+        likes: 30,
+      };
+      const result = await api
+        .post("/api/blogs")
+        .send(newBlogObject)
+        .set("Authorization", "Bearer " + token)
+        .expect(201);
+
+      // const blogs = await api
+      //   .get("/api/blogs/" + result.body.id.toString())
+      //   .set("Authorization", "Bearer " + token);
+      // console.log(blogs.error);
+      // const chosenBlog = blogs.body;
+      //
       const deletedBlog = await api
-        .delete(`/api/blogs/${chosenBlog.id}`)
+        .delete(`/api/blogs/${result.body.id}`)
+        .set("Authorization", "Bearer " + token)
         .expect(200);
-      assert.deepStrictEqual(deletedBlog.body, chosenBlog);
+      assert.deepStrictEqual(deletedBlog.body, result.body);
     });
     it("if the id is not valid, returns error 400", async () => {
       const id = "afdsfsdr34342";
-      await api.delete(`/api/blogs/${id}`).expect(400);
+
+      const token = await loginToken();
+      await api
+        .delete(`/api/blogs/${id}`)
+        .set("Authorization", "Bearer " + token)
+        .expect(400);
     });
     it("if the id is valid, but the resources is already deleted, returns 404", async () => {
       const id = "5a422b3a1b54a676234d17f3";
-      await api.delete(`/api/blogs/${id}`).expect(404);
+
+      const token = await loginToken();
+      await api
+        .delete(`/api/blogs/${id}`)
+        .set("Authorization", "Bearer " + token)
+        .expect(404);
     });
   });
 
@@ -120,8 +186,12 @@ describe("testing Blog API", () => {
         likes: chosenBlog.likes + 1,
       };
       // console.log(chosenBlog);
+
+      const token = await loginToken();
       const result = await api
         .put(`/api/blogs/${chosenBlog.id}`)
+
+        .set("Authorization", "Bearer " + token)
         .send(newBlog)
         .expect(200);
       // console.log(result.body);
@@ -139,7 +209,12 @@ describe("testing Blog API", () => {
       };
       const id = "5a422a851b54a676234d17f3";
       // console.log(chosenBlog);
-      await api.put(`/api/blogs/${id}`).send(newBlog).expect(404);
+      const token = await loginToken();
+      await api
+        .put(`/api/blogs/${id}`)
+        .send(newBlog)
+        .set("Authorization", "Bearer " + token)
+        .expect(404);
       // console.log(result.body);
     });
     it("if the id is invalid, returns a 400", async () => {
@@ -153,8 +228,13 @@ describe("testing Blog API", () => {
         likes: chosenBlog.likes + 1,
       };
       const id = "this_id_is_invalid";
-      // console.log(chosenBlog);
-      await api.put(`/api/blogs/${id}`).send(newBlog).expect(400);
+
+      const token = await loginToken();
+      await api
+        .put(`/api/blogs/${id}`)
+        .send(newBlog)
+        .set("Authorization", "Bearer " + token)
+        .expect(400);
       // console.log(result.body);
     });
   });
