@@ -12,6 +12,16 @@ const errorHandler = (error, request, response, next) => {
         })),
       );
     }
+
+    case "MongoServerError": {
+      if (error.code === 11000) {
+        const message = Object.keys(error.keyPattern).map((val) => ({
+          error: `${val} should be unique`,
+        }));
+        return response.status(400).json(message[0]);
+      }
+    }
+
     default:
       break;
   }
