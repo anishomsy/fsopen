@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Blog from "./components/Blog";
+import { Blog, CreateBlogForm } from "./components/Blog";
 import blogService from "./services/blogs";
 import { loginUser } from "./services/login";
 import { LoginForm } from "./components/Login";
@@ -8,16 +8,19 @@ const App = () => {
   const [blogs, setBlogs] = useState([]);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [userInfo, setUserInfo] = useState(null);
+  const [blogForm, setBlogForm] = useState({ title: "", author: "", url: "" });
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
   }, []);
   useEffect(() => {
-    const user = window.localStorage.getItem("userInfo");
-    if (!user) {
+    const loggedInUserInfo = window.localStorage.getItem("userInfo");
+    if (!loggedInUserInfo) {
       return setUserInfo(null);
     }
-    return setUserInfo(JSON.parse(user));
+    const user = JSON.parse(loggedInUserInfo);
+    blogService.setToken(user.token);
+    return setUserInfo(user);
   }, []);
 
   const handleLogin = async (event) => {
@@ -27,6 +30,8 @@ const App = () => {
       setLoginForm({ username: "", password: "" });
       setUserInfo(user);
       window.localStorage.setItem("userInfo", JSON.stringify(user));
+
+      blogService.setToken(user.token);
 
       return;
     } catch (error) {
@@ -40,6 +45,15 @@ const App = () => {
     setUserInfo(null);
     return;
   };
+  const handleCreateBlogChange = (event) => {
+    const newObject = {
+      ...blogForm,
+      [event.target.name]: event.target.value,
+    };
+    setBlogForm(newObject);
+
+    return;
+  };
 
   const handleLoginFormChange = (event) => {
     const newObject = {
@@ -48,6 +62,21 @@ const App = () => {
     };
     setLoginForm(newObject);
     return;
+  };
+
+  const handleCreateBlog = async (event) => {
+    event.preventDefault();
+    try {
+      const blog = await blogService.create(blogForm);
+      const newBlogs = blogs.concat(blog);
+      setBlogs(newBlogs);
+      setBlogForm({ title: "", author: "", url: "" });
+    } catch (error) {
+      if (error.response.data.error) {
+        return handleLogout();
+      }
+      console.log(error.response.data);
+    }
   };
 
   return (
@@ -65,6 +94,11 @@ const App = () => {
               {userInfo.name} is logged in
               <button onClick={handleLogout}>logout</button>
             </p>
+            <CreateBlogForm
+              handleCreateBlog={handleCreateBlog}
+              handleCreateBlogChange={handleCreateBlogChange}
+              values={blogForm}
+            />
           </div>
         )}
       </div>
