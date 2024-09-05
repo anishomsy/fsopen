@@ -7,7 +7,7 @@ const cors = require("cors");
 const blogRouter = require("./controllers/blog");
 const usersRouter = require("./controllers/user");
 const loginRouter = require("./controllers/login");
-
+const morgan = require("morgan");
 const mongoose = require("mongoose");
 
 mongoose.set("strictQuery", false);
@@ -25,6 +25,7 @@ mongoose
 
 // config express
 const app = express();
+app.use(morgan("dev"));
 app.use(cors());
 app.use(express.json());
 
