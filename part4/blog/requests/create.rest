@@ -1,6 +1,6 @@
-POST http://localhost:3002/api/blogs HTTP/1.1
+POST http://localhost:3002/api/blogs/ HTTP/1.1
 Content-Type: application/json
-
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJvb3QiLCJuYW1lIjoiSmFtZXMgTW9yZ2FuIiwiaWQiOiI2NmQ3M2RkM2IwMmIzYzFkNDQ3Nzg0NTQiLCJpYXQiOjE3MjU0NTYxNTIsImV4cCI6MTcyNTQ1OTc1Mn0.2Xu7X2GfqrQ3123QocUKqCwVL3nj-Wv5sZWgOdVz2qA
 
 {
     "title": "hello, world",
