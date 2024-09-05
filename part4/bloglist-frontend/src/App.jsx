@@ -3,17 +3,16 @@ import { Blog, CreateBlogForm, Notification } from "./components/Blog";
 import blogService from "./services/blogs";
 import { loginUser } from "./services/login";
 import { LoginForm } from "./components/Login";
-
+import Togglable from "./components/Togglable";
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [userInfo, setUserInfo] = useState(null);
-  const [blogForm, setBlogForm] = useState({ title: "", author: "", url: "" });
   const [notificationMessage, setNotificationMessage] = useState(null);
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
   }, []);
+
   useEffect(() => {
     const loggedInUserInfo = window.localStorage.getItem("userInfo");
     if (!loggedInUserInfo) {
@@ -36,11 +35,9 @@ const App = () => {
     return;
   };
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
+  const handleLogin = async (loginFormObject) => {
     try {
-      const user = await loginUser(loginForm.username, loginForm.password);
-      setLoginForm({ username: "", password: "" });
+      const user = await loginUser(loginFormObject);
       setUserInfo(user);
       window.localStorage.setItem("userInfo", JSON.stringify(user));
 
@@ -58,32 +55,14 @@ const App = () => {
     setUserInfo(null);
     return;
   };
-  const handleCreateBlogChange = (event) => {
-    const newObject = {
-      ...blogForm,
-      [event.target.name]: event.target.value,
-    };
-    setBlogForm(newObject);
 
-    return;
-  };
-
-  const handleLoginFormChange = (event) => {
-    const newObject = {
-      ...loginForm,
-      [event.target.name]: event.target.value,
-    };
-    setLoginForm(newObject);
-    return;
-  };
-
-  const handleCreateBlog = async (event) => {
-    event.preventDefault();
+  const handleCreateBlog = async (newBlogObject) => {
     try {
-      const blog = await blogService.create(blogForm);
+      const blog = await blogService.create(newBlogObject);
       const newBlogs = blogs.concat(blog);
+
       setBlogs(newBlogs);
-      setBlogForm({ title: "", author: "", url: "" });
+
       Notify({
         message: `a new blog '${blog.title}' by ${blog.author} was created`,
         type: "success",
@@ -118,22 +97,18 @@ const App = () => {
       </div>
       <div>
         {userInfo === null ? (
-          <LoginForm
-            handleLoginFormChange={handleLoginFormChange}
-            handleLogin={handleLogin}
-            values={loginForm}
-          />
+          <Togglable toggleLabel="login">
+            <LoginForm loginUserInfo={handleLogin} />
+          </Togglable>
         ) : (
           <div>
             <p>
               {userInfo.name} is logged in
               <button onClick={handleLogout}>logout</button>
             </p>
-            <CreateBlogForm
-              handleCreateBlog={handleCreateBlog}
-              handleCreateBlogChange={handleCreateBlogChange}
-              values={blogForm}
-            />
+            <Togglable toggleLabel="new blog">
+              <CreateBlogForm createBlog={handleCreateBlog} />
+            </Togglable>
           </div>
         )}
       </div>
