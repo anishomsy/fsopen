@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Blog, CreateBlogForm } from "./components/Blog";
+import { Blog, CreateBlogForm, Notification } from "./components/Blog";
 import blogService from "./services/blogs";
 import { loginUser } from "./services/login";
 import { LoginForm } from "./components/Login";
@@ -9,6 +9,7 @@ const App = () => {
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [userInfo, setUserInfo] = useState(null);
   const [blogForm, setBlogForm] = useState({ title: "", author: "", url: "" });
+  const [notificationMessage, setNotificationMessage] = useState(null);
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
@@ -22,6 +23,18 @@ const App = () => {
     blogService.setToken(user.token);
     return setUserInfo(user);
   }, []);
+
+  const Notify = (info) => {
+    if (info === null) {
+      return setNotificationMessage(null);
+    }
+    setNotificationMessage(info);
+    setTimeout(() => {
+      setNotificationMessage(null);
+    }, 5000);
+
+    return;
+  };
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -71,16 +84,38 @@ const App = () => {
       const newBlogs = blogs.concat(blog);
       setBlogs(newBlogs);
       setBlogForm({ title: "", author: "", url: "" });
+      Notify({
+        message: `a new blog '${blog.title}' by ${blog.author} was created`,
+        type: "success",
+      });
     } catch (error) {
-      if (error.response.data.error) {
+      if (error.response.data.error === "token expired") {
+        Notify({
+          message: error.response.data.error,
+          type: "error",
+        });
+
         return handleLogout();
       }
-      console.log(error.response.data);
+      error.response.data.map((val) => {
+        return Notify({
+          message: val.message,
+          type: "error",
+        });
+      });
     }
   };
 
   return (
     <div>
+      <div>
+        {notificationMessage === null ? null : (
+          <Notification
+            message={notificationMessage.message}
+            type={notificationMessage.type}
+          />
+        )}
+      </div>
       <div>
         {userInfo === null ? (
           <LoginForm

@@ -45,4 +45,12 @@ const CreateBlogForm = ({
   );
 };
 
-export { Blog, CreateBlogForm };
+const Notification = ({ message, type }) => {
+  return (
+    <>
+      <h1>{message}</h1>
+    </>
+  );
+};
+
+export { Blog, CreateBlogForm, Notification };
