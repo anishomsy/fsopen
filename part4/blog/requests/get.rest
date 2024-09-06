@@ -18,12 +18,9 @@ Content-Type: application/json
 
 
 ###
-PUT  http://localhost:3002/api/blogs/66d47a65a03d8a18eaf10a1e HTTP/1.1
+PUT  http://localhost:3002/api/blogs/66da12ec75529845e8acb98e HTTP/1.1
 Content-Type: application/json
 
 {
-    "title": "hello, world",
-    "author": "john doe",
-    "url": "none",
-    "likes":2
+    "likes":10
 }

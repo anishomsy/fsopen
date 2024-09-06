@@ -1,12 +1,70 @@
 import { useState } from "react";
 
-const Blog = ({ blog }) => (
-  <div>
-    <p>
-      {blog.title} - {blog.author}
-    </p>
-  </div>
-);
+import blogService from "../services/blogs";
+
+const Blog = ({ blog, handleBlogDelete, userId = null }) => {
+  const [isView, setIsview] = useState(false);
+  const [updatedBlog, setUpdatedBlog] = useState(null);
+  const toggleView = () => {
+    setIsview(!isView);
+  };
+
+  const blogToShow = updatedBlog ? updatedBlog : blog;
+
+  const handleLike = async () => {
+    try {
+      const newBlogObject = {
+        ...blogToShow,
+        user: { ...blogToShow.user },
+        likes: blogToShow.likes + 1,
+      };
+      const result = await blogService.update(blogToShow.id, newBlogObject);
+      setUpdatedBlog(result);
+    } catch (error) {
+      console.log(error);
+    }
+
+    return;
+  };
+  const handleDelete = () => {
+    const permission = confirm(
+      `Remove blog "${blogToShow.title}" by ${blogToShow.author}`,
+    );
+    if (!permission) {
+      return null;
+    }
+    return handleBlogDelete(blogToShow.id);
+  };
+
+  return (
+    <div className="blog">
+      <div>
+        {blogToShow.title} - {blogToShow.author}
+        <button onClick={toggleView}>{isView ? "hide" : "view"}</button>
+      </div>
+      {!isView ? (
+        ""
+      ) : (
+        <div>
+          <p>{blogToShow.url}</p>
+          <p>
+            likes:{blogToShow.likes}
+            <button onClick={handleLike}>like</button>
+          </p>
+          <p>{blogToShow.user.name}</p>
+
+          {userId === blogToShow.user.id ? (
+            <button type="" onClick={handleDelete}>
+              delete
+            </button>
+          ) : (
+            ""
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CreateBlogForm = ({ createBlog }) => {
   const [blogForm, setBlogForm] = useState({ title: "", author: "", url: "" });
@@ -23,7 +81,7 @@ const CreateBlogForm = ({ createBlog }) => {
 
   const handleCreateBlog = (event) => {
     event.preventDefault();
-    console.log(blogForm);
+
     createBlog(blogForm);
 
     setBlogForm({ title: "", author: "", url: "" });
@@ -64,12 +122,4 @@ const CreateBlogForm = ({ createBlog }) => {
   );
 };
 
-const Notification = ({ message, type }) => {
-  return (
-    <>
-      <h3>{message}</h3>
-    </>
-  );
-};
-
-export { Blog, CreateBlogForm, Notification };
+export { Blog, CreateBlogForm };

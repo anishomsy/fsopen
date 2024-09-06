@@ -13,6 +13,7 @@ const LoginForm = ({ loginUserInfo }) => {
 
   const handleLogin = (event) => {
     event.preventDefault();
+
     loginUserInfo(loginForm);
 
     setLoginForm({ username: "", password: "" });

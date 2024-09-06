@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
-import { Blog, CreateBlogForm, Notification } from "./components/Blog";
+
 import blogService from "./services/blogs";
 import { loginUser } from "./services/login";
+
+import { Blog, CreateBlogForm } from "./components/Blog";
+import Notification from "./components/Notification";
 import { LoginForm } from "./components/Login";
 import Togglable from "./components/Togglable";
+
+import "./App.css";
+
 const App = () => {
   const [blogs, setBlogs] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
@@ -16,12 +22,19 @@ const App = () => {
   useEffect(() => {
     const loggedInUserInfo = window.localStorage.getItem("userInfo");
     if (!loggedInUserInfo) {
+      window.localStorage.clear();
       return setUserInfo(null);
     }
     const user = JSON.parse(loggedInUserInfo);
     blogService.setToken(user.token);
     return setUserInfo(user);
   }, []);
+
+  const handleLogout = () => {
+    window.localStorage.removeItem("userInfo");
+    setUserInfo(null);
+    return;
+  };
 
   const Notify = (info) => {
     if (info === null) {
@@ -45,14 +58,11 @@ const App = () => {
 
       return;
     } catch (error) {
-      console.log(error);
+      Notify({
+        message: error.error,
+        type: "error",
+      });
     }
-    return;
-  };
-
-  const handleLogout = () => {
-    window.localStorage.removeItem("userInfo");
-    setUserInfo(null);
     return;
   };
 
@@ -85,14 +95,31 @@ const App = () => {
     }
   };
 
+  const handleBlogDelete = async (id) => {
+    try {
+      const deletedBlog = await blogService.remove(id);
+
+      console.log(deletedBlog);
+      const updatedBlogs = blogs.filter((blog) => {
+        console.log(blog);
+        return blog.id !== deletedBlog.id;
+      });
+      setBlogs(updatedBlogs);
+      Notify({
+        message: `The blog '${deletedBlog.title}' by ${deletedBlog.author} was deleted!`,
+        type: "success",
+      });
+    } catch (error) {
+      console.log(error.data.error);
+      Notify({ message: error.data.error, type: "error" });
+    }
+    return;
+  };
   return (
     <div>
       <div>
         {notificationMessage === null ? null : (
-          <Notification
-            message={notificationMessage.message}
-            type={notificationMessage.type}
-          />
+          <Notification notification={notificationMessage} />
         )}
       </div>
       <div>
@@ -112,11 +139,20 @@ const App = () => {
           </div>
         )}
       </div>
-      <div>
+      <div className="blog-list">
         <h2>blogs</h2>
-        {blogs.map((blog) => (
-          <Blog key={blog.id} blog={blog} />
-        ))}
+        {blogs
+          .sort((a, b) => {
+            return a.likes < b.likes;
+          })
+          .map((blog) => (
+            <Blog
+              key={blog.id}
+              blog={blog}
+              handleBlogDelete={handleBlogDelete}
+              userId={userInfo ? userInfo.id : null}
+            />
+          ))}
       </div>
     </div>
   );

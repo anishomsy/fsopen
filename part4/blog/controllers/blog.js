@@ -97,29 +97,41 @@ blogRouter.delete(
   },
 );
 
-blogRouter.put(
-  "/:id",
-  middleware.userExtractor,
-  async (request, response, next) => {
-    const id = request.params.id;
-    try {
-      const updatedObject = {
-        title: request.body.title,
-        url: request.body.url,
-        author: request.body.author,
-        likes: request.body.likes,
-      };
-      const result = await Blog.findByIdAndUpdate(id, updatedObject, {
-        new: true,
-      });
-      if (!result) {
-        return response.status(404).end();
-      }
-      // console.log(result);
-      return response.status(200).json(result);
-    } catch (error) {
-      next(error);
+blogRouter.put("/:id", async (request, response, next) => {
+  const id = request.params.id;
+  try {
+    const updatedBlog = {
+      title: request.body.title,
+      url: request.body.url,
+      author: request.body.author,
+      likes: request.body.likes,
+    };
+    const result = await Blog.findByIdAndUpdate(
+      id,
+      {
+        $set: updatedBlog,
+      },
+      { new: true },
+    ).populate("user", {
+      username: 1,
+      name: 1,
+    });
+    // if (!originalBlog) {
+    //   return response.status(404).end();
+    // }
+    //
+    // const result = await originalBlog.updateOne(updatedBlog, {
+    //   returnDocument: true,
+    // });
+    if (!result) {
+      return response.status(404).end();
     }
-  },
-);
+
+    console.log(result);
+    // console.log(result);
+    return response.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
 module.exports = blogRouter;
