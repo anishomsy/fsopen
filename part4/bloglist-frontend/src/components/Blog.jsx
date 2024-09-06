@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import PropTypes from "prop-types";
 import blogService from "../services/blogs";
 
 const Blog = ({ blog, handleBlogDelete, userId = null }) => {
@@ -65,6 +66,11 @@ const Blog = ({ blog, handleBlogDelete, userId = null }) => {
     </div>
   );
 };
+Blog.propTypes = {
+  blog: PropTypes.object.isRequired,
+  handleBlogDelete: PropTypes.func.isRequired,
+  userId: PropTypes.string.isRequired,
+};
 
 const CreateBlogForm = ({ createBlog }) => {
   const [blogForm, setBlogForm] = useState({ title: "", author: "", url: "" });
@@ -121,5 +127,7 @@ const CreateBlogForm = ({ createBlog }) => {
     </>
   );
 };
+
+CreateBlogForm.propTypes = { createBlog: PropTypes.func.isRequired };
 
 export { Blog, CreateBlogForm };

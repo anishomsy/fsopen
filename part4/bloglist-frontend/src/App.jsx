@@ -150,7 +150,7 @@ const App = () => {
               key={blog.id}
               blog={blog}
               handleBlogDelete={handleBlogDelete}
-              userId={userInfo ? userInfo.id : null}
+              userId={userInfo ? userInfo.id : ""}
             />
           ))}
       </div>
