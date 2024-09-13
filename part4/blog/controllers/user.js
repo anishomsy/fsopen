@@ -5,7 +5,6 @@ const bcrypt = require("bcrypt");
 usersRouter.post("/", async (request, response, next) => {
   const { username, password, name } = request.body;
   // validate stuff here for early return
-
   if (password.length < 6) {
     return response
       .status(400)
