@@ -66,6 +66,23 @@ const App = () => {
     return;
   };
 
+  const handleLike = async (blogToUpdate) => {
+    try {
+      const result = await blogService.update(blogToUpdate.id, blogToUpdate);
+      const updatedBlogs = blogs.reduce((blog, currentBlog) => {
+        if (currentBlog.id === result.id) {
+          return blog.concat(result);
+        }
+        return blog.concat(currentBlog);
+      }, []);
+      setBlogs(updatedBlogs);
+    } catch (error) {
+      console.log(error);
+    }
+
+    return;
+  };
+
   const handleCreateBlog = async (newBlogObject) => {
     try {
       const blog = await blogService.create(newBlogObject);
@@ -99,9 +116,7 @@ const App = () => {
     try {
       const deletedBlog = await blogService.remove(id);
 
-      console.log(deletedBlog);
       const updatedBlogs = blogs.filter((blog) => {
-        console.log(blog);
         return blog.id !== deletedBlog.id;
       });
       setBlogs(updatedBlogs);
@@ -142,15 +157,14 @@ const App = () => {
       <div className="blog-list">
         <h2>blogs</h2>
         {blogs
-          .sort((a, b) => {
-            return a.likes < b.likes;
-          })
+          .sort((a, b) => b.likes - a.likes)
           .map((blog) => (
             <Blog
               key={blog.id}
               blog={blog}
               handleBlogDelete={handleBlogDelete}
               userId={userInfo ? userInfo.id : ""}
+              handleLike={handleLike}
             />
           ))}
       </div>

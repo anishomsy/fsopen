@@ -1,61 +1,50 @@
 import { useState } from "react";
 
 import PropTypes from "prop-types";
-import blogService from "../services/blogs";
 
-const Blog = ({ blog, handleBlogDelete, userId = null }) => {
+const Blog = ({ blog, handleBlogDelete, userId = null, handleLike }) => {
   const [isView, setIsview] = useState(false);
-  const [updatedBlog, setUpdatedBlog] = useState(null);
   const toggleView = () => {
     setIsview(!isView);
   };
 
-  const blogToShow = updatedBlog ? updatedBlog : blog;
-
-  const handleLike = async () => {
-    try {
-      const newBlogObject = {
-        ...blogToShow,
-        user: { ...blogToShow.user },
-        likes: blogToShow.likes + 1,
-      };
-      const result = await blogService.update(blogToShow.id, newBlogObject);
-      setUpdatedBlog(result);
-    } catch (error) {
-      console.log(error);
-    }
-
-    return;
+  const handleLikeBtnClick = async () => {
+    const newBlogObject = {
+      ...blog,
+      user: { ...blog.user },
+      likes: blog.likes + 1,
+    };
+    handleLike(newBlogObject);
   };
   const handleDelete = () => {
-    const permission = confirm(
-      `Remove blog "${blogToShow.title}" by ${blogToShow.author}`,
-    );
-    if (!permission) {
-      return null;
-    }
-    return handleBlogDelete(blogToShow.id);
+    // const permission = window.confirm(
+    //   `Remove blog "${blog.title}" by ${blog.author}`,
+    // );
+    // if (!permission) {
+    //   return null;
+    // }
+    return handleBlogDelete(blog.id);
   };
 
   return (
     <div className="blog">
       <div>
-        {blogToShow.title} - {blogToShow.author}
+        {blog.title} - {blog.author}
         <button onClick={toggleView}>{isView ? "hide" : "view"}</button>
       </div>
       {!isView ? (
         ""
       ) : (
         <div>
-          <p>{blogToShow.url}</p>
-          <p>
-            likes:{blogToShow.likes}
-            <button onClick={handleLike}>like</button>
+          <p id="blogUrl">{blog.url}</p>
+          <p id="blogLikes">
+            likes:{blog.likes}
+            <button onClick={handleLikeBtnClick}>like</button>
           </p>
-          <p>{blogToShow.user.name}</p>
+          <p id="blogUserName">{blog.user.name}</p>
 
-          {userId === blogToShow.user.id ? (
-            <button type="" onClick={handleDelete}>
+          {userId === blog.user.id ? (
+            <button type="button" onClick={handleDelete}>
               delete
             </button>
           ) : (
@@ -68,7 +57,6 @@ const Blog = ({ blog, handleBlogDelete, userId = null }) => {
 };
 Blog.propTypes = {
   blog: PropTypes.object.isRequired,
-  handleBlogDelete: PropTypes.func.isRequired,
   userId: PropTypes.string.isRequired,
 };
 
@@ -99,6 +87,8 @@ const CreateBlogForm = ({ createBlog }) => {
       <h1>create new</h1>
       <form onSubmit={handleCreateBlog}>
         <input
+          data-testid="newBlogTitle"
+          id="newBlogTitle"
           type="text"
           name="title"
           onChange={handleNewBlogFormChange}
@@ -107,6 +97,8 @@ const CreateBlogForm = ({ createBlog }) => {
         />
         <br />
         <input
+          data-testid="newBlogAuthor"
+          id="newBlogAuthor"
           type="text"
           name="author"
           onChange={handleNewBlogFormChange}
@@ -115,6 +107,8 @@ const CreateBlogForm = ({ createBlog }) => {
         />
         <br />
         <input
+          data-testid="newBlogUrl"
+          id="newBlogUrl"
           type="text"
           name="url"
           onChange={handleNewBlogFormChange}
@@ -122,7 +116,13 @@ const CreateBlogForm = ({ createBlog }) => {
           placeholder="url"
         />
         <br />
-        <button type="submit">create</button>
+        <button
+          type="submit"
+          data-testid="newBlogCreateBtn"
+          id="newBlogCreateBtn"
+        >
+          create
+        </button>
       </form>
     </>
   );
